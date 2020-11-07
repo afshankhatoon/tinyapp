@@ -41,3 +41,13 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+app.get("/urls/:shortURL", (req, res) => {
+  let longURL;
+  for(let url in urlDatabase){
+    if(url===req.params.shortURL)
+      longURL=urlDatabase[url];
+  }
+  const templateVars = { shortURL: req.params.shortURL, longURL: longURL };
+  res.render("urls_show", templateVars);
+});
