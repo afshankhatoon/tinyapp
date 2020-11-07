@@ -11,7 +11,7 @@ const urlDatabase = {
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-function generateRandomString() {
+function generateRandomString(){
     return Math.random().toString(36).substr(2, 6);
 }
 
@@ -64,6 +64,10 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
+  const key = generateRandomString();
+  urlDatabase[key]=req.body.longURL;
+  console.log("urlDatabase",urlDatabase);
+  console.log("req.body",req.body);  // Log the POST request body to the console
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
+
 });
