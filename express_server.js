@@ -64,10 +64,10 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const key = generateRandomString();
-  urlDatabase[key]=req.body.longURL;
-  console.log("urlDatabase",urlDatabase);
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL]=req.body.longURL;
   console.log("req.body",req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
-
+  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/:${shortURL}`);
+  //res.redirect('https://www.google.com');
 });
