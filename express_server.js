@@ -110,3 +110,8 @@ app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
 });
+
+app.get("/register", (req, res) => {
+  const templateVars = {username: null};
+  res.render("register", templateVars);
+});
