@@ -4,7 +4,7 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
+  b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
@@ -15,9 +15,9 @@ function generateRandomString(){
     return Math.random().toString(36).substr(2, 6);
 }
 
-app.get("/", (req, res) => {
+/* app.get("/", (req, res) => {
   res.send("Hello!");
-});
+}); */
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -54,17 +54,19 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL.substring(1);
-  const longURL = urlDatabase[shortURL];
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL.substring(1)];
   res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   let longURL;
-  let shortURL = req.params.shortURL.substring(1);
-  for(let url in urlDatabase)
-    if(url===shortURL)
+  let shortURL = req.params.shortURL;
+  for(let url in urlDatabase){
+    if(url===shortURL.substring(1)){
       longURL=urlDatabase[url];
+    }
+  }
   const templateVars = { shortURL: shortURL, longURL: longURL };
   res.render("urls_show", templateVars);
 });
