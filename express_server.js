@@ -3,8 +3,9 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const PORT = 8080; // default port 8080
 const {checkEmail, generateRandomString, getUsers} = require("./helpers");
-app.set("view engine", "ejs");
 app.use(cookieParser());
+app.set("view engine", "ejs");
+
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -68,9 +69,14 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = getUsers(req.session["user_id"], users);
+  console.log(req.cookies);
+  const user = getUsers(req.cookies["user_id"], users);
   const templateVars = {user: user};
-  res.render("urls_new", templateVars);
+  if (user) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -123,8 +129,18 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('user_id',true);
-  res.redirect("/urls");
+  const email = req.body.email;
+  const password = req.body.password;
+  const userExists = checkEmail(email, users);
+  console.log("email",email,"password",password);
+  if (!userExists) {
+    res.status(403).send("Forbidden.");
+  } else if (password !== users[userExists].password) {
+    res.status(403).send("Incorrect Password.");
+  } else {
+    res.cookie('user_id', userExists);
+    res.redirect("/urls");
+  }
 });
 
 app.post("/logout", (req, res) => {
@@ -143,6 +159,7 @@ app.post("/register", (req, res) => {
   let userID = generateRandomString();
   let userEmail = req.body.email;
   let userPassword = req.body.password;
+  console.log("users ::: ",users);
   if(!userEmail || !userPassword)
     res.status(400).send("Registration failed. Email and/or Password fields cannot be empty.");
   else if (checkEmail(userEmail, users)) 
@@ -153,4 +170,5 @@ app.post("/register", (req, res) => {
     res.cookie('user_id',userID);
     res.redirect("/urls");
   }
+  console.log("users ::: ",users);
 });
