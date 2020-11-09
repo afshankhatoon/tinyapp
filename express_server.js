@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const PORT = 8080; // default port 8080
+const {checkEmail, generateRandomString, getUsers} = require("./helpers");
 app.set("view engine", "ejs");
 app.use(cookieParser());
 
@@ -26,9 +27,7 @@ const users = {
   }
 }
 
-function generateRandomString(){
-    return Math.random().toString(36).substr(2, 6);
-}
+
 
 /* app.get("/", (req, res) => {
   res.send("Hello!");
@@ -60,13 +59,10 @@ app.get("/urls.json", (req, res) => {
 });
  */
 
-function getUsers(user_id){
-  return users[user_id];
-}
 
 app.get("/urls", (req, res) => {
   //console.log(req);
-  const user = getUsers(req.cookies["user_id"]);
+  const user = getUsers(req.cookies["user_id"],users);
   const templateVars = { urls: urlDatabase, user: user};
   res.render("urls_index", templateVars);
 });
@@ -147,8 +143,14 @@ app.post("/register", (req, res) => {
   let userID = generateRandomString();
   let userEmail = req.body.email;
   let userPassword = req.body.password;
-  users[userID]={id:userID,email:userEmail,password:userPassword};
-  console.log(users);
-  res.cookie('user_id',userID);
-  res.redirect("/urls");
+  if(!userEmail || !userPassword)
+    res.status(400).send("Registration failed. Email and/or Password fields cannot be empty.");
+  else if (checkEmail(userEmail, users)) 
+    res.status(400).send("Registration failed. Email already exists. Please login.");
+  else{
+    users[userID]={id:userID,email:userEmail,password:userPassword};
+    console.log(users);
+    res.cookie('user_id',userID);
+    res.redirect("/urls");
+  }
 });
