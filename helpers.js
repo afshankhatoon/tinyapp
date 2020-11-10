@@ -11,6 +11,9 @@ function generateRandomString(){
 }
 
 function getUsers(user_id,users){
+  console.log("helpers",user_id);
+  console.log("users helpers",users);
+  console.log(users[user_id]);
   return users[user_id];
 }
 
