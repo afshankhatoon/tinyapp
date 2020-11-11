@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const PORT = 8080; // default port 8080
+const bcrypt = require("bcrypt");
 const {checkEmail, generateRandomString, getUsers, urlsForUser} = require("./helpers");
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -77,7 +78,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
-  if(shortURL.substring(0,1)=='.')
+  if(shortURL.substring(0,1)==':')
     shortURL = shortURL.substring(1);
   /* for(let url in urlDatabase){
     if(url===shortURL.substring(1)){
@@ -123,7 +124,7 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  const user = greq.cookies["user_id"];
+  const user = req.cookies["user_id"];
   if(urlDatabase[shortURL].userID===user){
       delete urlDatabase[shortURL];
       res.redirect("/urls");
@@ -147,7 +148,7 @@ app.post("/login", (req, res) => {
   const userExists = checkEmail(email, users);
   if (!userExists) {
     res.status(403).send("Forbidden.");
-  } else if (password !== users[userExists].password) {
+  } else if (bcrypt.compareSync(password, users[userExists].password)){
     res.status(403).send("Incorrect Password.");
   } else {
     res.cookie('user_id', userExists);
@@ -164,6 +165,7 @@ app.post("/register", (req, res) => {
   let userID = generateRandomString();
   let userEmail = req.body.email;
   let userPassword = req.body.password;
+  const hashedPassword = bcrypt.hashSync(userPassword,10);
   if(!userEmail || !userPassword)
     res.status(400).send("Registration failed. Email and/or Password fields cannot be empty.");
   else if (checkEmail(userEmail, users)) 
