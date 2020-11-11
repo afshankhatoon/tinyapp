@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const PORT = 8080; // default port 8080
-const {checkEmail, generateRandomString, getUsers} = require("./helpers");
+const {checkEmail, generateRandomString, getUsers, urlsForUser} = require("./helpers");
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -28,14 +28,31 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+app.get("/", (req, res) => {
+  if (req.cookies["user_id"]) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
 app.get("/urls", (req, res) => {
   const user = getUsers(req.cookies["user_id"],users);
-  const templateVars = { urls: urlDatabase, user: user};
-  res.render("urls_index", templateVars);
+  if (user) {
+    const urls = urlsForUser(user.id, urlDatabase);
+    const templateVars = {urls: urls, user: user};
+    res.render("urls_index", templateVars);
+  } else {
+    res
+      .status(401)
+      .send(
+        "Unauthorized. Please login first before trying to access this page."
+      );
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -59,16 +76,28 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let longURL;
   let shortURL = req.params.shortURL;
-  for(let url in urlDatabase){
-    if(url===shortURL){
+  if(shortURL.substring(0,1)=='.')
+    shortURL = shortURL.substring(1);
+  /* for(let url in urlDatabase){
+    if(url===shortURL.substring(1)){
       longURL=urlDatabase[url]["longURL"];
     }
+  } */ 
+  const user = req.cookies["user_id"];
+  const foundUser = getUsers(user,users);
+  if(!user)
+    res.status(401).send("Please login.");
+  else if(!foundUser || !urlDatabase[shortURL])
+    res.status(401).send("Sorry, you do not own this url.");
+  else if(foundUser && user){
+    const templateVars = { 
+      shortURL: shortURL, 
+      longURL: urlDatabase[shortURL].longURL, 
+      user: user 
+    };
+    res.render("urls_show", templateVars);
   }
-  const user = getUsers(req.cookies["user_id"],users);
-  const templateVars = { shortURL: shortURL, longURL: longURL, user: user };
-  res.render("urls_show", templateVars);
 });
 
 app.get("/login", (req, res) => {
@@ -83,7 +112,10 @@ app.get("/register", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL]=req.body.longURL;
+  urlDatabase[shortURL]={
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"]
+  };
   //console.log("req.body",req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   res.redirect(`/urls/:${shortURL}`);
@@ -91,13 +123,21 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  const obj = urlDatabase[shortURL];
-  delete urlDatabase[shortURL];
-  res.redirect("/urls");
+  const user = greq.cookies["user_id"];
+  if(urlDatabase[shortURL].userID===user){
+      delete urlDatabase[shortURL];
+      res.redirect("/urls");
+  } else {
+    res
+      .status(401)
+      .send(
+        "Unauthorized. Please login first before trying to access this page."
+      );
+  }
 });
 
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id]["longURL"] = req.body.longURL;
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
   res.redirect("/urls");
 });
 
@@ -114,7 +154,7 @@ app.post("/login", (req, res) => {
     res.redirect("/urls");
   }
 });
-
+//SHOULD IT REDIRECT TO URLS OR LOGIN?
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
@@ -135,9 +175,10 @@ app.post("/register", (req, res) => {
   }
 });
 
-/* app.get("/", (req, res) => {
+//CHANGE FUNCTION TO REDIRECT
+app.get("/", (req, res) => {
   res.send("Hello!");
-}); */
+}); 
 
 /* app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");

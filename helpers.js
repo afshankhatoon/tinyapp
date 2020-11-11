@@ -11,10 +11,17 @@ function generateRandomString(){
 }
 
 function getUsers(user_id,users){
-  console.log("helpers",user_id);
-  console.log("users helpers",users);
-  console.log(users[user_id]);
   return users[user_id];
 }
 
-module.exports = {checkEmail, getUsers, generateRandomString};
+function urlsForUser(id,urlDatabase){
+ let filteredURL={};
+ for(let url in urlDatabase){
+   if(urlDatabase[url]["userID"]===id){
+    filteredURL[url]=urlDatabase[url];
+  }
+ }
+ return filteredURL;
+}
+
+module.exports = {checkEmail, getUsers, generateRandomString, urlsForUser};
