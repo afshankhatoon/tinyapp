@@ -1,4 +1,4 @@
-function checkEmail(email, users) {
+function getUserByEmail(email, users) {
   for (key in users) {
     if (email === users[key].email) {
       return key;
@@ -24,4 +24,5 @@ function urlsForUser(id,urlDatabase){
  return filteredURL;
 }
 
-module.exports = {checkEmail, getUsers, generateRandomString, urlsForUser};
+
+module.exports = {getUserByEmail, getUsers, generateRandomString, urlsForUser};

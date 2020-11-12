@@ -4,7 +4,7 @@ const app = express();
 const cookieSession = require('cookie-session');
 const PORT = 8080; // default port 8080
 const bcrypt = require("bcrypt");
-const {checkEmail, generateRandomString, getUsers, urlsForUser} = require("./helpers");
+const {getUserByEmail, generateRandomString, getUsers, urlsForUser} = require("./helpers");
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -158,7 +158,7 @@ app.post("/urls/:shortURL", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const userExists = checkEmail(email, users);
+  const userExists = getUserByEmail(email, users);
   if (!userExists) {
     res.status(403).send("Forbidden.");
   } else if (bcrypt.compareSync(password, users[userExists].password)){
@@ -183,7 +183,7 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(userPassword,10);
   if(!userEmail || !userPassword)
     res.status(400).send("Registration failed. Email and/or Password fields cannot be empty.");
-  else if (checkEmail(userEmail, users)) 
+  else if (getUserByEmail(userEmail, users)) 
     res.status(400).send("Registration failed. Email already exists. Please login.");
   else{
     users[userID]={id:userID,email:userEmail,password:userPassword};
